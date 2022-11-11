@@ -4,7 +4,7 @@ import requests
 urlMovie = 'https://movie.douban.com/subject/{}/'
 urlBook = 'https://book.douban.com/subject/{}/'
 
-def getMovieId():
+def getMovieURL():
     pass
-def getBookId():
+def getBookURL():
     pass
