@@ -1,4 +1,8 @@
 from unittest import result
+from flask import flash
+from matplotlib.pyplot import flag
+from numpy import result_type
+from pyparsing import null_debug_action
 import requests
 import time
 import os
@@ -132,8 +136,85 @@ def handleMovieData(text):
     return result
 
 
+def doubanBook(url):
+    head = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
+    }
+    r = requests.get(url,headers=head)
+    return r.text
+
+def handleBook(text):
+
+    result = {
+        "基本信息":{},
+        "内容简介":{},
+        "作者简介":{}
+    }
+
+
+    s = etree.HTML(text)
+    soup = BeautifulSoup(text,features='lxml')
+    
+    
+    
+    result['基本信息']['书名'] = s.xpath('//*[@id="wrapper"]/h1/span/text()')[0]
+
+    info = soup.select('div[id="info"]')
+    flag = 0
+    lastKey = ""
+    for i in info[0].contents:
+        a = i.get_text().strip()
+        a = re.sub('\\s|\n','',a)
+        if(a != ""):
+            # print('a[-1]',a[-1])
+            if(a[-1] != ':' and flag == 0):
+                b = a.split(":")
+                result['基本信息'][b[0]] = b[1]
+            else:
+                if(flag == 0):
+                    result['基本信息'][a] = ""
+                    lastKey = a
+                else:
+                    result['基本信息'][lastKey] = a
+
+                flag = (flag + 1) % 2
+                
+
+    
+
+    a = str(soup.select('div[class="related_info"]'))
+    if(re.findall('内容简介',a)):
+        if(re.findall('all hidden',a)):
+            contentIntro = soup.select('span[class="all hidden"] > div > div[class="intro"] > p')[0].get_text()
+            # print(contentIntro)
+        else:
+            contentIntro = soup.select('div[class="indent"] > div > div[class="intro"] > p')[0].get_text()
+            # print(contentIntro)
+        result['内容简介']['intro'] = contentIntro
+    if(re.findall('作者简介',a)):
+        authorIntro = soup.select('div[class="indent"] > div > div[class="intro"]')[0].get_text().strip()
+        result['作者简介']['intro'] = authorIntro
+
+
+    # try:
+    #     contentIntro = soup.select('span[class="all hidden"] > div > div[class="intro"] > p')[0].get_text()
+    #     result['内容简介']['intro'] = contentIntro
+    # except:
+    #     pass
+
+    # try:
+    #     authorIntro = soup.select('div[class="indent"] > div > div[class="intro"]')[0].get_text().strip()
+    #     result['作者简介']['intro'] = authorIntro
+    # except:
+    #     pass
+
+    return result
+
 if __name__ == '__main__':
     # print(getMovieURL())
-    responseText = doubanMovie('https://movie.douban.com/subject/1292052/')
-    result = handleMovieData(responseText)
+    # responseText = doubanMovie('https://movie.douban.com/subject/1292052/')
+    # result = handleMovieData(responseText)
+    # print(result)
+    responText = doubanBook('https://book.douban.com/subject/1046265/')
+    result = handleBook(responText)
     print(result)
