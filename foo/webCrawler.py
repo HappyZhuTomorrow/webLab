@@ -78,38 +78,57 @@ def doubanMovie(url):
 
 def handleMovieData(text):
     result = {
-        "电影名:":[],
-        "导演:":[],
-        "编剧:":[],
-        "主演:":[],
-        "类型:":[],
-        "制片国家/地区:":[],
-        "语言:":[],
-        "上映日期:":[],
-        "片长:":[],
-        "又名:":[],
-        "IMDb:":[]
+        "基本信息":{},
+        "剧情简介":{},
+        "演职员表":{}
     }
     s = etree.HTML(text)
-    result['导演:'] = s.xpath('//*[@id="info"]/span[1]/span[2]/a/text()')
-    result['编剧:'] = s.xpath('//*[@id="info"]/span[2]/span[2]/a/text()')
-    result['主演:'] = s.xpath('//*[@id="info"]/span[3]/span[2]/a/text()')
-    result['电影名:'] = s.xpath('//*[@id="content"]/h1/span[1]/text()')
+    result["基本信息"]['电影名:'] = s.xpath('//*[@id="content"]/h1/span[1]/text()')
+    result["基本信息"]['导演:'] = s.xpath('//*[@id="info"]/span[1]/span[2]/a/text()')
+    result["基本信息"]['编剧:'] = s.xpath('//*[@id="info"]/span[2]/span[2]/a/text()')
+    result["基本信息"]['主演:'] = s.xpath('//*[@id="info"]/span[3]/span[2]/a/text()')
+    
+    # print(s.xpath('//*[@id="link-report-intra"]/span[2]/text()'))
 
     soup = BeautifulSoup(text,features='lxml')
+    
     datas = str(soup.find_all(id='info')).split('\n')
     del datas[0:4]
     del datas[-1]
     for data in datas:
-        reResult = re.findall('>(.*?)</span>',data)
-        for _r in reResult[1:]:
-            result[reResult[0]].append(_r)
+        try:
+            reResult = re.findall('>(.*?)</span>',data)
+            result["基本信息"][reResult[0]] = reResult[1:]
 
-        r1 = re.sub('>(.*?)</span>','',data)
-        r2 = re.findall('<span class="pl"(.*?)<br/>',r1)
-        if(result[reResult[0]] == []):
-            result[reResult[0]].append(r2[0].strip(' '))
+            r1 = re.sub('>(.*?)</span>','',data)
+            r2 = re.findall('<span class="pl"(.*?)<br/>',r1)
+            if(result["基本信息"][reResult[0]] == []):
+                result["基本信息"][reResult[0]].append(r2[0].strip(' '))
+        except:
+            pass
 
+        
+    intro = str(soup.select('span[class="all hidden"]')[0])
+    intro = intro.replace(' ','').replace('<br/>','').replace('\n','').replace(chr(12288),'')
+    reResult = re.findall('<spanclass="allhidden">(.*?)</span>',intro)
+    result['剧情简介'] = reResult[0]
+
+
+    actors = soup.select('div[class="info"]')
+    actList = []
+    for i in actors:
+        act = {
+            "actor":"",
+            "character":""
+        }
+        i = str(i)
+        reS = re.findall('title="(.*)">',i)
+        # print(reS[0],'========>',reS[1])
+        act['actor'] = reS[0]
+        act['character'] = reS[1]
+        actList.append(act)
+
+    result['演职员表']['data'] = actList
     return result
 
 
