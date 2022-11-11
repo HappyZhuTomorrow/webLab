@@ -87,7 +87,7 @@ def handleMovieData(text):
         "演职员表":{}
     }
     s = etree.HTML(text)
-    result["基本信息"]['电影名:'] = s.xpath('//*[@id="content"]/h1/span[1]/text()')
+    result["基本信息"]['电影名:'] = s.xpath('//*[@id="content"]/h1/span[1]/text()')[0]
     result["基本信息"]['导演:'] = s.xpath('//*[@id="info"]/span[1]/span[2]/a/text()')
     result["基本信息"]['编剧:'] = s.xpath('//*[@id="info"]/span[2]/span[2]/a/text()')
     result["基本信息"]['主演:'] = s.xpath('//*[@id="info"]/span[3]/span[2]/a/text()')
@@ -112,10 +112,19 @@ def handleMovieData(text):
             pass
 
         
-    intro = str(soup.select('span[class="all hidden"]')[0])
-    intro = intro.replace(' ','').replace('<br/>','').replace('\n','').replace(chr(12288),'')
-    reResult = re.findall('<spanclass="allhidden">(.*?)</span>',intro)
-    result['剧情简介'] = reResult[0]
+    # intro = str(soup.select('span[class="all hidden"]')[0])
+    # intro = intro.replace(' ','').replace('<br/>','').replace('\n','').replace(chr(12288),'')
+    # reResult = re.findall('<spanclass="allhidden">(.*?)</span>',intro)
+    a = str(soup.select('div[class="related-info"]'))
+    if(re.findall('剧情简介',a)):
+        if(re.findall('all hidden',a)):
+            intro = soup.select('div[class="indent"] > span[class="all hidden"]')[0].get_text().strip().replace('\n','')
+            intro = ''.join(intro.split())
+        else:
+            intro = soup.select('div[class="indent"] > span')[0].get_text().strip().replace('\n','')
+            intro = ''.join(intro.split())
+            # print(intro)
+        result['剧情简介'] = intro
 
 
     actors = soup.select('div[class="info"]')
@@ -212,9 +221,9 @@ def handleBook(text):
 
 if __name__ == '__main__':
     # print(getMovieURL())
-    # responseText = doubanMovie('https://movie.douban.com/subject/1292052/')
-    # result = handleMovieData(responseText)
-    # print(result)
-    responText = doubanBook('https://book.douban.com/subject/1046265/')
-    result = handleBook(responText)
+    responseText = doubanMovie('https://movie.douban.com/subject/1292220/')
+    result = handleMovieData(responseText)
     print(result)
+    # responText = doubanBook('https://book.douban.com/subject/1046265/')
+    # result = handleBook(responText)
+    # print(result)
