@@ -15,26 +15,33 @@ urlMovie = 'https://movie.douban.com/subject/{}/'
 urlBook = 'https://book.douban.com/subject/{}/'
 
 def getMovieURL():
-    with open('../docs/Movie_id.txt','r') as movieFile:
-        print(movieFile.readline())
+    with open('./docs/Movie_id.txt','r') as movieFile:
+        # print(movieFile.readline())
         lines = movieFile.readlines()
         lines = map(lambda x:x.strip(),lines)
+        lines = list(map(lambda x:int(x),lines))
+        lines.sort()
         URLs = map(lambda x:urlMovie.format(x),lines)
         return list(URLs)
 
 def getBookURL():
-    with open('../docs/Book_id.txt','r') as bookFile:
-        print(bookFile.readline())
+    with open('./docs/Book_id.txt','r') as bookFile:
+        # print(bookFile.readline())
         lines = bookFile.readlines()
         lines = map(lambda x:x.strip(),lines)
-        URLs = map(lambda x:urlMovie.format(x),lines)
+        lines = list(map(lambda x:int(x),lines))
+        lines.sort()
+        URLs = map(lambda x:urlBook.format(x),lines)
         return list(URLs)
 
 def doubanMovie(url):
     head = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
     }
-    r = requests.get(url,headers=head)
+    cookie = {
+        "Cookie": 'bid=2Q-LfsUC0uE; douban-fav-remind=1; ll="118183"; viewed="1026425_1419736_1084336_1046265"; dbcl2="239547439:jOO/mvnZcZw"; ck=sWLF; frodotk="9b850252dacf4ae7d28f06f8906de0b5"; push_noty_num=0; push_doumail_num=0'
+    }
+    r = requests.get(url,headers=head,cookies=cookie)
     return r.text
     result = {
         "电影名:":[],
@@ -149,7 +156,10 @@ def doubanBook(url):
     head = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
     }
-    r = requests.get(url,headers=head)
+    cookie = {
+        "Cookie": 'bid=2Q-LfsUC0uE; douban-fav-remind=1; ll="118183"; viewed="1026425_1419736_1084336_1046265"; dbcl2="239547439:jOO/mvnZcZw"; ck=sWLF; frodotk="9b850252dacf4ae7d28f06f8906de0b5"; push_noty_num=0; push_doumail_num=0'
+    }
+    r = requests.get(url,headers=head,cookies=cookie)
     return r.text
 
 def handleBook(text):
@@ -219,11 +229,38 @@ def handleBook(text):
 
     return result
 
+def writeFile(fileName,dictData):
+    json_str = json.dumps(dictData)
+    with open('./docs/{}'.format(fileName),'w') as file:
+        file.write(json_str)
+    file.close()
+
+
 if __name__ == '__main__':
+
+    movieResult = {
+        "data":[]
+    }
+
+    
+    writeFile('Book.json',movieResult)
+    # URLs = getMovieURL()  
+    # i=1
+    # for url in URLs:
+    #     print('正在爬取',i)
+    #     i += 1
+    #     responseText = doubanMovie('https://movie.douban.com/subject/1292220/')
+    #     result = handleMovieData(responseText)
+    #     movieResult['data'].append(result)
+    #     time.sleep(1)
+    # writeFile('Movie.json',movieResult)
+    
+
+
     # print(getMovieURL())
-    responseText = doubanMovie('https://movie.douban.com/subject/1292220/')
-    result = handleMovieData(responseText)
-    print(result)
+    # responseText = doubanMovie('https://movie.douban.com/subject/1292220/')
+    # result = handleMovieData(responseText)
+    # print(result)
     # responText = doubanBook('https://book.douban.com/subject/1046265/')
     # result = handleBook(responText)
     # print(result)
